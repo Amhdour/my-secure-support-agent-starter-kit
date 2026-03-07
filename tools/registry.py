@@ -1,6 +1,7 @@
 """Centralized tool registry implementation."""
 
 from dataclasses import dataclass, field
+from typing import Sequence
 
 from tools.contracts import ToolDescriptor, ToolRegistry
 
@@ -17,5 +18,5 @@ class InMemoryToolRegistry(ToolRegistry):
     def get(self, tool_name: str) -> ToolDescriptor | None:
         return self._tools.get(tool_name)
 
-    def list_allowlisted(self):
+    def list_allowlisted(self) -> Sequence[ToolDescriptor]:
         return tuple(tool for tool in self._tools.values() if tool.allowed)

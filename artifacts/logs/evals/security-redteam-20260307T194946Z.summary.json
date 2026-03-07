@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "passed_count": 10,
+  "suite_name": "security-redteam",
+  "summary": "10/10 scenarios passed",
+  "total": 10
+}
