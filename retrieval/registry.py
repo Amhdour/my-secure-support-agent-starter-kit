@@ -1,6 +1,7 @@
 """In-memory source registry for retrieval boundary enforcement."""
 
 from dataclasses import dataclass, field
+from typing import Sequence
 
 from retrieval.contracts import SourceRegistration, SourceRegistry
 
@@ -17,5 +18,5 @@ class InMemorySourceRegistry(SourceRegistry):
     def get(self, source_id: str) -> SourceRegistration | None:
         return self._sources.get(source_id)
 
-    def list_for_tenant(self, tenant_id: str):
+    def list_for_tenant(self, tenant_id: str) -> Sequence[SourceRegistration]:
         return tuple(source for source in self._sources.values() if source.tenant_id == tenant_id)
