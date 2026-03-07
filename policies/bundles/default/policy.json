@@ -1,0 +1,40 @@
+{
+  "global": {
+    "kill_switch": false,
+    "fallback_to_rag": true,
+    "default_risk_tier": "medium"
+  },
+  "risk_tiers": {
+    "low": {"max_retrieval_top_k": 8, "tools_enabled": true},
+    "medium": {"max_retrieval_top_k": 5, "tools_enabled": true},
+    "high": {"max_retrieval_top_k": 2, "tools_enabled": false}
+  },
+  "retrieval": {
+    "allowed_tenants": ["tenant-a", "tenant-b"],
+    "tenant_allowed_sources": {
+      "tenant-a": ["kb-main", "kb-faq"],
+      "tenant-b": ["kb-main-b"]
+    },
+    "require_trust_metadata": true,
+    "require_provenance": true
+  },
+  "tools": {
+    "allowed_tools": ["ticket_lookup", "account_update"],
+    "forbidden_tools": ["payments_export"],
+    "confirmation_required_tools": ["account_update"],
+    "forbidden_fields_per_tool": {
+      "ticket_lookup": ["ssn"],
+      "account_update": ["raw_password"]
+    },
+    "rate_limits_per_tool": {
+      "ticket_lookup": 20,
+      "account_update": 5
+    }
+  },
+  "overrides": {
+    "production": {
+      "global": {"default_risk_tier": "high"},
+      "tools": {"forbidden_tools": ["payments_export", "account_update"]}
+    }
+  }
+}

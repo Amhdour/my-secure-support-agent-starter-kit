@@ -1,0 +1,35 @@
+app:
+  name: secure-support-agent
+  host: 0.0.0.0
+  port: 8000
+  request_timeout_seconds: 30
+
+retrieval:
+  backend: stub
+  top_k: 5
+  index_path: ./artifacts/index
+
+tools:
+  allowlist: []
+  execution_enabled: false
+
+policies:
+  mode: enforce
+  bundle_path: ./policies/bundles/default
+
+telemetry:
+  enabled: true
+  audit_sink: stdout
+  audit_log_path: ./artifacts/logs/audit.log
+
+launch_gate:
+  strict: true
+  policy_path: ./policies/bundles/default/policy.json
+  audit_log_path: ./artifacts/logs/audit.jsonl
+  eval_summary_glob: ./artifacts/logs/evals/*.summary.json
+  required_checks:
+    - mandatory_controls
+    - policy_artifact
+    - audit_minimums
+    - eval_threshold
+    - fallback_readiness
