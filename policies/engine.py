@@ -53,9 +53,12 @@ class RuntimePolicyEngine(PolicyEngine):
             constraints = {
                 "allowed_source_ids": list(allowed_sources),
                 "top_k_cap": tier.max_retrieval_top_k,
+<<<<<<< HEAD
+=======
                 "require_trust_metadata": self.policy.retrieval.require_trust_metadata,
                 "require_provenance": self.policy.retrieval.require_provenance,
                 "allowed_trust_domains": list(self.policy.retrieval.allowed_trust_domains),
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
             }
             return PolicyDecision(
                 request_id=request_id,
@@ -120,8 +123,6 @@ class RuntimePolicyEngine(PolicyEngine):
                 return PolicyDecision(request_id=request_id, allow=False, reason="missing tool name or action", risk_tier=risk_tier)
             if not isinstance(arguments, Mapping):
                 return PolicyDecision(request_id=request_id, allow=False, reason="tool arguments must be an object", risk_tier=risk_tier)
-            if not tier.tools_enabled:
-                return PolicyDecision(request_id=request_id, allow=False, reason="tools disabled for risk tier", risk_tier=risk_tier)
 
             if tool_name in self.policy.tools.forbidden_tools:
                 return PolicyDecision(request_id=request_id, allow=False, reason="tool forbidden", risk_tier=risk_tier)

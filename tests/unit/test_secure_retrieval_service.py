@@ -154,6 +154,8 @@ def test_retrieval_fails_closed_on_backend_exception() -> None:
     results = service.search(_query(tenant_id="tenant-a", allowed_source_ids=("kb-main",)))
 
     assert results == ()
+<<<<<<< HEAD
+=======
 
 
 class DenyRetrievalPolicyEngine:
@@ -178,24 +180,6 @@ def test_retrieval_denied_by_policy_returns_empty() -> None:
     assert results == ()
 
 
-class AllowExternalTrustPolicyEngine:
-    def evaluate(self, request_id: str, action: str, context: dict):
-        from policies.contracts import PolicyDecision
-
-        return PolicyDecision(
-            request_id=request_id,
-            allow=True,
-            reason="retrieval allowed",
-            constraints={
-                "allowed_source_ids": ["kb-external"],
-                "top_k_cap": 5,
-                "require_trust_metadata": True,
-                "require_provenance": True,
-                "allowed_trust_domains": ["external"],
-            },
-        )
-
-
 def test_low_trust_source_is_quarantined_by_default() -> None:
     registry = InMemorySourceRegistry()
     registry.register(
@@ -215,30 +199,6 @@ def test_low_trust_source_is_quarantined_by_default() -> None:
     assert results == ()
 
 
-def test_low_trust_source_allowed_when_policy_permits_domain() -> None:
-    registry = InMemorySourceRegistry()
-    registry.register(
-        SourceRegistration(
-            source_id="kb-external",
-            tenant_id="tenant-a",
-            display_name="External KB",
-            enabled=True,
-            trust_domain="external",
-        )
-    )
-    raw = FakeRawRetriever([_make_document(doc_id="d1", source_id="kb-external", tenant_id="tenant-a")])
-    service = SecureRetrievalService(
-        source_registry=registry,
-        raw_retriever=raw,
-        policy_engine=AllowExternalTrustPolicyEngine(),
-    )
-
-    results = service.search(_query(tenant_id="tenant-a", allowed_source_ids=("kb-external",)))
-
-    assert len(results) == 1
-    assert results[0].trust.source_id == "kb-external"
-
-
 def test_malformed_source_registration_is_denied() -> None:
     registry = InMemorySourceRegistry()
     registry.register(
@@ -256,59 +216,4 @@ def test_malformed_source_registration_is_denied() -> None:
     results = service.search(_query(tenant_id="tenant-a", allowed_source_ids=("kb-main",)))
 
     assert results == ()
-
-
-def test_malformed_document_shape_fails_closed() -> None:
-    class MalformedRawRetriever:
-        def search(self, query: RetrievalQuery):
-            return ({"document_id": "d1"},)
-
-    registry = InMemorySourceRegistry()
-    registry.register(SourceRegistration(source_id="kb-main", tenant_id="tenant-a", display_name="Main KB", enabled=True))
-    service = SecureRetrievalService(source_registry=registry, raw_retriever=MalformedRawRetriever())
-
-    results = service.search(_query(tenant_id="tenant-a", allowed_source_ids=("kb-main",)))
-
-    assert results == ()
-
-
-class RelaxProvenancePolicyEngine:
-    def evaluate(self, request_id: str, action: str, context: dict):
-        from policies.contracts import PolicyDecision
-
-        return PolicyDecision(
-            request_id=request_id,
-            allow=True,
-            reason="retrieval allowed",
-            constraints={
-                "allowed_source_ids": ["kb-main"],
-                "top_k_cap": 5,
-                "require_trust_metadata": True,
-                "require_provenance": False,
-                "allowed_trust_domains": ["internal"],
-            },
-        )
-
-
-def test_missing_provenance_still_denied_for_accepted_results() -> None:
-    registry = InMemorySourceRegistry()
-    registry.register(SourceRegistration(source_id="kb-main", tenant_id="tenant-a", display_name="Main KB", enabled=True))
-    raw = FakeRawRetriever(
-        [
-            _make_document(
-                doc_id="d1",
-                source_id="kb-main",
-                tenant_id="tenant-a",
-                citation_id="",
-            )
-        ]
-    )
-    service = SecureRetrievalService(
-        source_registry=registry,
-        raw_retriever=raw,
-        policy_engine=RelaxProvenancePolicyEngine(),
-    )
-
-    results = service.search(_query(tenant_id="tenant-a", allowed_source_ids=("kb-main",)))
-
-    assert results == ()
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)

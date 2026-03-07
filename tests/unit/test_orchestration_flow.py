@@ -164,6 +164,8 @@ def test_orchestration_blocks_when_retrieval_policy_denied() -> None:
     event_types = [event.event_type for event in audit.events]
     assert "deny.event" in event_types
     assert "request.end" in event_types
+<<<<<<< HEAD
+=======
 
 
 class FakeDenyToolRouter:
@@ -266,3 +268,4 @@ def test_orchestration_activates_fallback_to_rag_when_tools_route_denied_with_fa
     assert response.tool_decisions == ()
     event_types = [event.event_type for event in audit.events]
     assert "fallback.event" in event_types
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)

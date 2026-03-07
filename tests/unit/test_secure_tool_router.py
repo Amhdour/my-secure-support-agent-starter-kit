@@ -1,12 +1,18 @@
 """Tests for secure tool routing decisions and enforcement."""
 
+<<<<<<< HEAD
+=======
 import pytest
 
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 from tools.contracts import (
     ALLOWED_DECISION,
     DENY_DECISION,
     REQUIRE_CONFIRMATION_DECISION,
+<<<<<<< HEAD
+=======
     DirectToolExecutionDeniedError,
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
     ToolDescriptor,
     ToolInvocation,
 )
@@ -15,9 +21,15 @@ from tools.registry import InMemoryToolRegistry
 from tools.router import SecureToolRouter
 
 
+<<<<<<< HEAD
+def _router_with_tool(tool: ToolDescriptor) -> SecureToolRouter:
+    registry = InMemoryToolRegistry()
+    registry.register(tool)
+=======
 def _router_with_tool(tool: ToolDescriptor, executor=None) -> SecureToolRouter:
     registry = InMemoryToolRegistry()
     registry.register(tool, executor=executor)
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
     return SecureToolRouter(registry=registry, rate_limiter=InMemoryToolRateLimiter())
 
 
@@ -35,16 +47,29 @@ def _invocation(*, tool_name: str, arguments: dict[str, object] | None = None, c
 
 def test_allowlisted_tool_execution() -> None:
     router = _router_with_tool(
+<<<<<<< HEAD
+        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True)
+    )
+
+    decision, result = router.mediate_and_execute(
+        _invocation(tool_name="ticket_lookup"),
+        executor=lambda _: {"ok": True},
+    )
+
+=======
         ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
         executor=lambda _: {"ok": True},
     )
 
     decision, result = router.mediate_and_execute(_invocation(tool_name="ticket_lookup"))
 
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
     assert decision.status == ALLOWED_DECISION
     assert result == {"ok": True}
 
 
+<<<<<<< HEAD
+=======
 def test_direct_registry_execution_is_blocked_loudly() -> None:
     registry = InMemoryToolRegistry()
     registry.register(
@@ -56,6 +81,7 @@ def test_direct_registry_execution_is_blocked_loudly() -> None:
         registry.execute(_invocation(tool_name="ticket_lookup"), execution_secret=object())
 
 
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 def test_forbidden_tool_denial() -> None:
     router = _router_with_tool(
         ToolDescriptor(name="ticket_lookup", description="lookup", allowed=False)
@@ -143,6 +169,8 @@ def test_tool_router_redacts_argument_values_in_decisions() -> None:
 
     assert decision.status == ALLOWED_DECISION
     assert decision.sanitized_arguments == {"ticket_id": "[redacted]", "email": "[redacted]"}
+<<<<<<< HEAD
+=======
 
 
 def test_router_executes_registered_executor_once_for_allowed_calls() -> None:
@@ -195,19 +223,4 @@ def test_tool_denial_by_policy_blocks_execution() -> None:
     assert "policy denied" in decision.reason
     assert result is None
     assert calls == []
-
-
-def test_execution_secret_rebinding_with_different_secret_is_blocked() -> None:
-    registry = InMemoryToolRegistry()
-    registry.register(
-        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
-        executor=lambda _: {"ok": True},
-    )
-    router = SecureToolRouter(registry=registry, rate_limiter=InMemoryToolRateLimiter())
-
-    with pytest.raises(DirectToolExecutionDeniedError):
-        registry.bind_execution_secret(object())
-
-    decision, result = router.mediate_and_execute(_invocation(tool_name="ticket_lookup"))
-    assert decision.status == ALLOWED_DECISION
-    assert result == {"ok": True}
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)

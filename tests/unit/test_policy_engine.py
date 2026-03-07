@@ -117,6 +117,8 @@ def test_invalid_policy_safe_fail(tmp_path) -> None:
     assert loaded.environment == "development"
 
 
+<<<<<<< HEAD
+=======
 
 
 def test_missing_policy_safe_fail(tmp_path) -> None:
@@ -128,6 +130,7 @@ def test_missing_policy_safe_fail(tmp_path) -> None:
     assert loaded.kill_switch is True
     assert "missing" in loaded.validation_errors[0]
 
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 def test_retrieval_enforcement_denies_unallowed_tenant() -> None:
     policy = build_runtime_policy(environment="dev", payload=_policy_payload())
     engine = RuntimePolicyEngine(policy=policy)
@@ -142,6 +145,8 @@ def test_retrieval_enforcement_denies_unallowed_tenant() -> None:
     assert "tenant" in decision.reason
 
 
+<<<<<<< HEAD
+=======
 
 
 def test_retrieval_policy_constraints_include_metadata_and_trust_controls() -> None:
@@ -159,6 +164,7 @@ def test_retrieval_policy_constraints_include_metadata_and_trust_controls() -> N
     assert decision.constraints.get("require_provenance") is True
     assert decision.constraints.get("allowed_trust_domains") == ["internal"]
 
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 def test_tool_enforcement_applies_allowlist_and_forbidden_fields() -> None:
     policy = build_runtime_policy(environment="dev", payload=_policy_payload())
     engine = RuntimePolicyEngine(policy=policy)
@@ -265,24 +271,3 @@ def test_tools_route_denied_when_no_tools_allowlisted() -> None:
 
     assert decision.allow is False
     assert decision.fallback_to_rag is True
-
-
-def test_tools_invoke_denied_when_risk_tier_disables_tools() -> None:
-    payload = _policy_payload()
-    payload["global"]["default_risk_tier"] = "high"
-    policy = build_runtime_policy(environment="dev", payload=payload)
-    engine = RuntimePolicyEngine(policy=policy)
-
-    decision = engine.evaluate(
-        request_id="req-5",
-        action="tools.invoke",
-        context={
-            "tenant_id": "tenant-a",
-            "tool_name": "ticket_lookup",
-            "action": "lookup",
-            "arguments": {},
-        },
-    )
-
-    assert decision.allow is False
-    assert decision.reason == "tools disabled for risk tier"

@@ -1,0 +1,49 @@
+modules = ["python-3.12", "bash"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 -m pytest && python3 -m evals.runner && python3 -m launch_gate.engine"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[userenv]
+
+[userenv.shared]
+ENVIRONMENT = "development"
+LOG_LEVEL = "INFO"
+APP_HOST = "0.0.0.0"
+APP_PORT = "8000"
+REQUEST_TIMEOUT_SECONDS = "30"
+RETRIEVAL_BACKEND = "stub"
+RETRIEVAL_TOP_K = "5"
+RETRIEVAL_INDEX_PATH = "./artifacts/index"
+TOOLS_ALLOWLIST = ""
+TOOL_EXECUTION_ENABLED = "false"
+POLICY_MODE = "enforce"
+POLICY_BUNDLE_PATH = "./policies/bundles/default"
+TELEMETRY_ENABLED = "true"
+AUDIT_SINK = "stdout"
+AUDIT_LOG_PATH = "./artifacts/logs/audit.log"
+LAUNCH_GATE_STRICT = "true"

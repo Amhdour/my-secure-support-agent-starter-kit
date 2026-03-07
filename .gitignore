@@ -7,6 +7,12 @@ __pycache__/
 # Env files
 .env
 
+<<<<<<< HEAD
+# Replit environment cache (may contain platform credentials)
+.cache/
+
+=======
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 # Artifacts
 artifacts/index/
 artifacts/logs/*.log
