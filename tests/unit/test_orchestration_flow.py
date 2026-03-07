@@ -164,3 +164,108 @@ def test_orchestration_blocks_when_retrieval_policy_denied() -> None:
     event_types = [event.event_type for event in audit.events]
     assert "deny.event" in event_types
     assert "request.end" in event_types
+<<<<<<< HEAD
+=======
+
+
+class FakeDenyToolRouter:
+    def route(self, invocation):
+        return ToolDecision(
+            status="deny",
+            tool_name=invocation.tool_name,
+            action=invocation.action,
+            reason="tool denied for safety",
+            sanitized_arguments={},
+        )
+
+
+class FakeConfirmToolRouter:
+    def route(self, invocation):
+        return ToolDecision(
+            status="require_confirmation",
+            tool_name=invocation.tool_name,
+            action=invocation.action,
+            reason="confirmation required",
+            sanitized_arguments={},
+        )
+
+
+def test_orchestration_logs_denied_tool_calls() -> None:
+    policy = FakePolicyEngine()
+    model = FakeModel()
+    audit = FakeAuditSink()
+
+    orchestrator = SupportAgentOrchestrator(
+        policy_engine=policy,
+        retriever=FakeRetriever(),
+        model=model,
+        tool_registry=FakeToolRegistry(),
+        tool_router=FakeDenyToolRouter(),
+        audit_sink=audit,
+    )
+
+    response = orchestrator.run(_build_request())
+
+    assert response.status == "ok"
+    deny_events = [event for event in audit.events if event.event_type == "deny.event"]
+    assert deny_events
+    assert any(event.event_payload.get("stage") == "tool.route" for event in deny_events)
+
+
+def test_orchestration_preserves_confirmation_required_flow() -> None:
+    policy = FakePolicyEngine()
+    model = FakeModel()
+    audit = FakeAuditSink()
+
+    orchestrator = SupportAgentOrchestrator(
+        policy_engine=policy,
+        retriever=FakeRetriever(),
+        model=model,
+        tool_registry=FakeToolRegistry(),
+        tool_router=FakeConfirmToolRouter(),
+        audit_sink=audit,
+    )
+
+    response = orchestrator.run(_build_request())
+
+    assert response.status == "ok"
+    assert response.tool_decisions[0].status == "require_confirmation"
+    confirmation_events = [event for event in audit.events if event.event_type == "confirmation.required"]
+    assert confirmation_events
+
+
+class FakeFallbackToolPolicyEngine(FakePolicyEngine):
+    def evaluate(self, request_id: str, action: str, context: dict) -> PolicyDecision:
+        self.calls.append(action)
+        if action == "tools.route":
+            return PolicyDecision(
+                request_id=request_id,
+                allow=False,
+                reason="tools disabled for risk tier",
+                fallback_to_rag=True,
+            )
+        return PolicyDecision(request_id=request_id, allow=True, reason="allowed")
+
+
+def test_orchestration_activates_fallback_to_rag_when_tools_route_denied_with_fallback() -> None:
+    policy = FakeFallbackToolPolicyEngine()
+    model = FakeModel()
+    router = FakeToolRouter()
+    audit = FakeAuditSink()
+
+    orchestrator = SupportAgentOrchestrator(
+        policy_engine=policy,
+        retriever=FakeRetriever(),
+        model=model,
+        tool_registry=FakeToolRegistry(),
+        tool_router=router,
+        audit_sink=audit,
+    )
+
+    response = orchestrator.run(_build_request())
+
+    assert response.status == "ok"
+    assert response.tool_decisions == ()
+    event_types = [event.event_type for event in audit.events]
+    assert "fallback.event" in event_types
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)

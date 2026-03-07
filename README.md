@@ -112,6 +112,11 @@ Not included:
 
 ## Documentation & Evidence Pack
 
+<<<<<<< HEAD
+=======
+- Architecture deep-dive: `docs/architecture.md`
+- Architecture diagrams: `docs/architecture_diagrams.md`
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 - Operator/developer setup: `docs/operator/setup.md`
 - Security reviewer guide: `docs/reviewer/security_review_guide.md`
 - Portfolio summary: `docs/portfolio/project_summary.md`

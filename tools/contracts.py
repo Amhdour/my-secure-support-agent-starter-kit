@@ -1,7 +1,11 @@
 """Tool contracts for mediated, policy-ready tool routing."""
 
 from dataclasses import dataclass, field
+<<<<<<< HEAD
 from typing import Mapping, Protocol, Sequence
+=======
+from typing import Callable, Mapping, Protocol, Sequence
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
 
 ALLOWED_DECISION = "allow"
@@ -9,6 +13,13 @@ DENY_DECISION = "deny"
 REQUIRE_CONFIRMATION_DECISION = "require_confirmation"
 
 
+<<<<<<< HEAD
+=======
+class DirectToolExecutionDeniedError(RuntimeError):
+    """Raised when code attempts to execute a tool without router mediation."""
+
+
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 @dataclass(frozen=True)
 class ToolDescriptor:
     """Central tool configuration entry used by the registry/router."""
@@ -46,9 +57,18 @@ class ToolDecision:
     sanitized_arguments: Mapping[str, object] = field(default_factory=dict)
 
 
+<<<<<<< HEAD
 class ToolRegistry(Protocol):
     def register(self, tool: ToolDescriptor) -> None:
         """Register or update one tool descriptor."""
+=======
+ToolExecutor = Callable[[ToolInvocation], Mapping[str, object]]
+
+
+class ToolRegistry(Protocol):
+    def register(self, tool: ToolDescriptor, executor: ToolExecutor | None = None) -> None:
+        """Register or update one tool descriptor and optional executor implementation."""
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
         ...
 
     def get(self, tool_name: str) -> ToolDescriptor | None:
@@ -59,6 +79,17 @@ class ToolRegistry(Protocol):
         """List tools currently allowlisted for routing."""
         ...
 
+<<<<<<< HEAD
+=======
+    def bind_execution_secret(self, secret: object) -> None:
+        """Bind an execution secret used to ensure only router-mediated execution."""
+        ...
+
+    def execute(self, invocation: ToolInvocation, execution_secret: object) -> Mapping[str, object]:
+        """Execute a tool only when presented with the router-bound execution secret."""
+        ...
+
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
 class ToolRouter(Protocol):
     def route(self, invocation: ToolInvocation) -> ToolDecision:

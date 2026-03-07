@@ -24,9 +24,16 @@ class SecureRetrievalService(Retriever):
 
     Safe behavior:
     - Deny cross-tenant documents.
+<<<<<<< HEAD
     - Deny unregistered/disabled sources.
     - Deny docs with missing/invalid trust metadata.
     - Deny docs without provenance metadata.
+=======
+    - Deny unregistered/disabled/malformed sources.
+    - Deny docs with missing/invalid trust metadata when required.
+    - Deny docs without provenance metadata when required.
+    - Restrict retrieval to allowlisted trust domains (default internal-only).
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
     - Apply policy constraints to tenant/source and top-k behavior.
     - Fail closed on policy or retriever errors.
     """
@@ -37,11 +44,23 @@ class SecureRetrievalService(Retriever):
     policy_engine: PolicyEngine | None = None
 
     def search(self, query: RetrievalQuery) -> Sequence[RetrievalDocument]:
+<<<<<<< HEAD
         if not query.tenant_id or query.top_k <= 0:
             return tuple()
 
         effective_allowed_sources = tuple(query.allowed_source_ids)
         effective_top_k = query.top_k
+=======
+        if not query.tenant_id or not query.query_text.strip() or query.top_k <= 0:
+            return tuple()
+
+        # Deny-by-default: source allowlist and trust-domain restrictions must be explicit.
+        effective_allowed_sources = tuple(query.allowed_source_ids)
+        effective_top_k = query.top_k
+        require_trust_metadata = True
+        require_provenance = True
+        allowed_trust_domains: tuple[str, ...] = ("internal",)
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
         if self.policy_engine is not None:
             try:
@@ -72,6 +91,26 @@ class SecureRetrievalService(Retriever):
             if isinstance(top_k_cap, int) and top_k_cap > 0:
                 effective_top_k = min(effective_top_k, top_k_cap)
 
+<<<<<<< HEAD
+=======
+            if "require_trust_metadata" in decision.constraints:
+                require_trust_metadata = bool(decision.constraints.get("require_trust_metadata"))
+            if "require_provenance" in decision.constraints:
+                require_provenance = bool(decision.constraints.get("require_provenance"))
+
+            constrained_domains = decision.constraints.get("allowed_trust_domains")
+            if isinstance(constrained_domains, list):
+                parsed_domains = tuple(
+                    domain.strip().lower() for domain in constrained_domains if isinstance(domain, str) and domain.strip()
+                )
+                if len(parsed_domains) == 0:
+                    return tuple()
+                allowed_trust_domains = parsed_domains
+
+        if len(effective_allowed_sources) == 0:
+            return tuple()
+
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
         effective_query = RetrievalQuery(
             request_id=query.request_id,
             tenant_id=query.tenant_id,
@@ -90,11 +129,21 @@ class SecureRetrievalService(Retriever):
             source = self.source_registry.get(document.trust.source_id)
             if source is None:
                 continue
+<<<<<<< HEAD
             if not self._source_allowed_for_query(source=source, query=effective_query):
                 continue
             if not self._has_valid_trust_metadata(document=document, tenant_id=effective_query.tenant_id):
                 continue
             if not self._has_valid_provenance(document=document):
+=======
+            if not self._is_valid_registered_source(source):
+                continue
+            if not self._source_allowed_for_query(source=source, query=effective_query, allowed_trust_domains=allowed_trust_domains):
+                continue
+            if require_trust_metadata and not self._has_valid_trust_metadata(document=document, tenant_id=effective_query.tenant_id):
+                continue
+            if require_provenance and not self._has_valid_provenance(document=document):
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
                 continue
             if not self._passes_filter_hooks(query=effective_query, document=document, source=source):
                 continue
@@ -104,13 +153,34 @@ class SecureRetrievalService(Retriever):
 
         return tuple(accepted)
 
+<<<<<<< HEAD
     def _source_allowed_for_query(self, source: SourceRegistration, query: RetrievalQuery) -> bool:
+=======
+    def _is_valid_registered_source(self, source: SourceRegistration) -> bool:
+        if not source.source_id or not source.tenant_id:
+            return False
+        if not source.trust_domain or not source.trust_domain.strip():
+            return False
+        return True
+
+    def _source_allowed_for_query(
+        self,
+        source: SourceRegistration,
+        query: RetrievalQuery,
+        allowed_trust_domains: tuple[str, ...],
+    ) -> bool:
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
         if not source.enabled:
             return False
         if source.tenant_id != query.tenant_id:
             return False
         if query.allowed_source_ids and source.source_id not in query.allowed_source_ids:
             return False
+<<<<<<< HEAD
+=======
+        if source.trust_domain.strip().lower() not in {item.strip().lower() for item in allowed_trust_domains}:
+            return False
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
         return True
 
     def _has_valid_trust_metadata(self, document: RetrievalDocument, tenant_id: str) -> bool:
@@ -140,6 +210,13 @@ class SecureRetrievalService(Retriever):
         source: SourceRegistration,
     ) -> bool:
         for hook in self.filter_hooks:
+<<<<<<< HEAD
             if not hook.allow(query=query, document=document, source=source):
+=======
+            try:
+                if not hook.allow(query=query, document=document, source=source):
+                    return False
+            except Exception:
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
                 return False
         return True
