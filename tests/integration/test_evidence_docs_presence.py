@@ -7,7 +7,15 @@ REQUIRED_DOCS = [
     "docs/evidence_pack/README.md",
     "docs/evidence_pack/architecture_summary.md",
     "docs/evidence_pack/control_summary.md",
+<<<<<<< HEAD
     "docs/evidence_pack/policy_summary.md",
+=======
+    "docs/evidence_pack/trust_boundary_summary.md",
+    "docs/evidence_pack/threat_model_summary.md",
+    "docs/evidence_pack/policy_summary.md",
+    "docs/evidence_pack/retrieval_security_summary.md",
+    "docs/evidence_pack/tool_authorization_summary.md",
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
     "docs/evidence_pack/eval_summary.md",
     "docs/evidence_pack/telemetry_audit_summary.md",
     "docs/evidence_pack/launch_gate_summary.md",
@@ -16,6 +24,11 @@ REQUIRED_DOCS = [
     "docs/operator/setup.md",
     "docs/reviewer/security_review_guide.md",
     "docs/portfolio/project_summary.md",
+<<<<<<< HEAD
+=======
+    "docs/architecture.md",
+    "docs/architecture_diagrams.md",
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 ]
 
 

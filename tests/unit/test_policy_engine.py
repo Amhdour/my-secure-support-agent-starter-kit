@@ -117,6 +117,20 @@ def test_invalid_policy_safe_fail(tmp_path) -> None:
     assert loaded.environment == "development"
 
 
+<<<<<<< HEAD
+=======
+
+
+def test_missing_policy_safe_fail(tmp_path) -> None:
+    missing_file = tmp_path / "missing.json"
+
+    loaded = load_policy(missing_file, environment="development")
+
+    assert loaded.valid is False
+    assert loaded.kill_switch is True
+    assert "missing" in loaded.validation_errors[0]
+
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 def test_retrieval_enforcement_denies_unallowed_tenant() -> None:
     policy = build_runtime_policy(environment="dev", payload=_policy_payload())
     engine = RuntimePolicyEngine(policy=policy)
@@ -131,6 +145,26 @@ def test_retrieval_enforcement_denies_unallowed_tenant() -> None:
     assert "tenant" in decision.reason
 
 
+<<<<<<< HEAD
+=======
+
+
+def test_retrieval_policy_constraints_include_metadata_and_trust_controls() -> None:
+    policy = build_runtime_policy(environment="dev", payload=_policy_payload())
+    engine = RuntimePolicyEngine(policy=policy)
+
+    decision = engine.evaluate(
+        request_id="req-constraints",
+        action="retrieval.search",
+        context={"tenant_id": "tenant-a"},
+    )
+
+    assert decision.allow is True
+    assert decision.constraints.get("require_trust_metadata") is True
+    assert decision.constraints.get("require_provenance") is True
+    assert decision.constraints.get("allowed_trust_domains") == ["internal"]
+
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 def test_tool_enforcement_applies_allowlist_and_forbidden_fields() -> None:
     policy = build_runtime_policy(environment="dev", payload=_policy_payload())
     engine = RuntimePolicyEngine(policy=policy)

@@ -1,5 +1,10 @@
 # Architecture (Phase 10)
 
+<<<<<<< HEAD
+=======
+> See `docs/architecture_diagrams.md` for runtime-aligned Mermaid diagrams of system topology, trust boundaries, and core control flows.
+
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 ## Design Goals
 - Policy-first orchestration.
 - RAG-first response generation.
@@ -35,7 +40,11 @@
 ## Tool Router Design
 - Every tool invocation must pass through `SecureToolRouter.route(...)` before execution.
 - Router checks, in order: registration, allowlist, forbidden actions, forbidden fields, argument validity, confirmation requirement, and per-tool rate limits.
+<<<<<<< HEAD
 - `mediate_and_execute(...)` executes tool handlers only when decision is `allow`.
+=======
+- `mediate_and_execute(...)` executes only through registry-registered handlers and only when decision is `allow`; direct registry execution attempts without router mediation are denied.
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 - When uncertain/invalid, router fails closed with an explicit `deny` reason.
 
 
@@ -64,7 +73,11 @@
 
 ## Launch Gate Design
 - Launch gate evaluates machine-checkable readiness rules over repository/runtime artifacts.
+<<<<<<< HEAD
 - It verifies mandatory controls, policy artifact validity, audit evidence minimums, eval pass thresholds, and fallback readiness.
+=======
+- It verifies mandatory controls, policy artifact validity, retrieval boundary and tool-router enforcement configuration, production kill-switch state, audit/replay evidence minimums, eval pass thresholds/outcome health, and fallback readiness.
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 - Decisions are transparent and structured as `go`, `conditional_go`, or `no_go`.
 - `no_go` is used when blockers exist (missing mandatory controls, invalid/missing policy artifact, or eval threshold failure).
 - `conditional_go` is used when critical blockers are absent but residual risks remain (e.g., incomplete audit evidence).

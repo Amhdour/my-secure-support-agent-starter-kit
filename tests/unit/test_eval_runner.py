@@ -2,6 +2,10 @@
 
 import json
 
+<<<<<<< HEAD
+=======
+from evals.contracts import BLOCKED_OUTCOME, PASS_OUTCOME
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 from evals.runner import SecurityEvalRunner
 from evals.scenario import load_scenarios
 
@@ -31,8 +35,21 @@ def test_eval_runner_produces_regression_outputs(tmp_path) -> None:
     first_record = json.loads(lines[0])
     assert "scenario_id" in first_record
     assert "severity" in first_record
+<<<<<<< HEAD
     summary = json.loads(summary_files[0].read_text())
     assert summary["total"] == 10
+=======
+    assert "outcome" in first_record
+
+    summary = json.loads(summary_files[0].read_text())
+    assert summary["total"] == 10
+    assert "outcomes" in summary
+    assert "pass" in summary["outcomes"]
+    assert "fail" in summary["outcomes"]
+    assert "expected_fail" in summary["outcomes"]
+    assert "blocked" in summary["outcomes"]
+    assert "inconclusive" in summary["outcomes"]
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
 
 def test_security_scenarios_exercise_real_policy_retrieval_tool_paths(tmp_path) -> None:
@@ -40,8 +57,16 @@ def test_security_scenarios_exercise_real_policy_retrieval_tool_paths(tmp_path) 
     result = runner.run("evals/scenarios/security_baseline.json", output_dir=tmp_path)
 
     by_id = {item.scenario_id: item for item in result.scenario_results}
+<<<<<<< HEAD
     assert by_id["cross_tenant_retrieval_attempt"].passed is True
     assert by_id["forbidden_tool_argument_attempt"].passed is True
     assert by_id["unauthorized_tool_use_attempt"].passed is True
     assert by_id["fallback_to_rag_verification"].passed is True
     assert by_id["auditability_verification"].passed is True
+=======
+    assert by_id["cross_tenant_retrieval_attempt"].outcome == BLOCKED_OUTCOME
+    assert by_id["forbidden_tool_argument_attempt"].outcome == PASS_OUTCOME
+    assert by_id["unauthorized_tool_use_attempt"].outcome == PASS_OUTCOME
+    assert by_id["fallback_to_rag_verification"].outcome == PASS_OUTCOME
+    assert by_id["auditability_verification"].outcome == PASS_OUTCOME
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)

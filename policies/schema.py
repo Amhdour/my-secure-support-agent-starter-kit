@@ -10,6 +10,10 @@ class RetrievalPolicy:
     tenant_allowed_sources: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
     require_trust_metadata: bool = True
     require_provenance: bool = True
+<<<<<<< HEAD
+=======
+    allowed_trust_domains: tuple[str, ...] = ("internal",)
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
 
 @dataclass(frozen=True)
@@ -124,6 +128,14 @@ def build_runtime_policy(*, environment: str, payload: Mapping[str, Any]) -> Run
         tenant_allowed_sources=tenant_allowed_sources,
         require_trust_metadata=bool(retrieval_cfg.get("require_trust_metadata", True)),
         require_provenance=bool(retrieval_cfg.get("require_provenance", True)),
+<<<<<<< HEAD
+=======
+        allowed_trust_domains=_tuple_of_strings(
+            retrieval_cfg.get("allowed_trust_domains", ["internal"]),
+            field_name="retrieval.allowed_trust_domains",
+            errors=errors,
+        ),
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
     )
 
     allowed_tools = _tuple_of_strings(tools_cfg.get("allowed_tools", []), field_name="tools.allowed_tools", errors=errors)

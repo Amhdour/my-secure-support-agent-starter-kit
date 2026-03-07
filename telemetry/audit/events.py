@@ -20,7 +20,11 @@ def create_audit_event(
     event_type: str,
     payload: dict,
 ) -> AuditEvent:
+<<<<<<< HEAD
     """Create an audit event with generated event id."""
+=======
+    """Create an audit event with generated event id and sanitized payload."""
+>>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
     return AuditEvent(
         event_id=f"evt-{uuid4()}",
