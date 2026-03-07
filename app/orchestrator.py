@@ -204,7 +204,7 @@ class SupportAgentOrchestrator:
             self._emit_request_end(context=context, status=response.status)
             return response
         except Exception as exc:  # fail-closed with evidence
-            self._emit(context=context, event_type=ERROR_EVENT, payload={"error_type": type(exc).__name__, "message": str(exc)})
+            self._emit(context=context, event_type=ERROR_EVENT, payload={"error_type": type(exc).__name__})
             response = self._blocked_response(request, context, policy_checks, "internal error")
             self._emit_request_end(context=context, status=response.status)
             return response

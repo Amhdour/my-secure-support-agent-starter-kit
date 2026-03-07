@@ -26,8 +26,13 @@ def build_replay_artifact(events: Sequence[AuditEvent]) -> ReplayArtifact:
     ordered = tuple(sorted(events, key=lambda item: item.created_at))
     first = ordered[0]
 
+    trace_ids = set(e.trace_id for e in ordered)
+    if len(trace_ids) > 1:
+        raise ValueError(f"replay artifact requires single trace; found {len(trace_ids)} distinct trace_ids")
+
     timeline = tuple(
         {
+            "event_id": event.event_id,
             "event_type": event.event_type,
             "created_at": event.created_at,
             "payload": dict(event.event_payload),

@@ -20,7 +20,7 @@ def create_audit_event(
     event_type: str,
     payload: dict,
 ) -> AuditEvent:
-    """Create an audit event with generated event id and sanitized payload."""
+    """Create an audit event with generated event id."""
 
     return AuditEvent(
         event_id=f"evt-{uuid4()}",
