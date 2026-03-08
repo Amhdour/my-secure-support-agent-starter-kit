@@ -1,15 +1,9 @@
 """Centralized tool registry implementation."""
 
 from dataclasses import dataclass, field
-<<<<<<< HEAD
-from typing import Sequence
-
-from tools.contracts import ToolDescriptor, ToolRegistry
-=======
-from typing import Mapping
+from typing import Mapping, Sequence
 
 from tools.contracts import DirectToolExecutionDeniedError, ToolDescriptor, ToolExecutor, ToolInvocation, ToolRegistry
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
 
 @dataclass
@@ -17,11 +11,6 @@ class InMemoryToolRegistry(ToolRegistry):
     """Simple centralized tool registry for local usage and tests."""
 
     _tools: dict[str, ToolDescriptor] = field(default_factory=dict)
-<<<<<<< HEAD
-
-    def register(self, tool: ToolDescriptor) -> None:
-        self._tools[tool.name] = tool
-=======
     _executors: dict[str, ToolExecutor] = field(default_factory=dict)
     _execution_secret: object | None = None
 
@@ -29,16 +18,11 @@ class InMemoryToolRegistry(ToolRegistry):
         self._tools[tool.name] = tool
         if executor is not None:
             self._executors[tool.name] = executor
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
     def get(self, tool_name: str) -> ToolDescriptor | None:
         return self._tools.get(tool_name)
 
-<<<<<<< HEAD
     def list_allowlisted(self) -> Sequence[ToolDescriptor]:
-        return tuple(tool for tool in self._tools.values() if tool.allowed)
-=======
-    def list_allowlisted(self):
         return tuple(tool for tool in self._tools.values() if tool.allowed)
 
     def bind_execution_secret(self, secret: object) -> None:
@@ -52,9 +36,6 @@ class InMemoryToolRegistry(ToolRegistry):
 
         executor = self._executors.get(invocation.tool_name)
         if executor is None:
-            raise DirectToolExecutionDeniedError(
-                f"tool '{invocation.tool_name}' has no registered executor"
-            )
+            raise DirectToolExecutionDeniedError(f"tool '{invocation.tool_name}' has no registered executor")
 
         return executor(invocation)
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)

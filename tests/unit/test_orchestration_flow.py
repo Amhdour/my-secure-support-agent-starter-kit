@@ -1,8 +1,8 @@
 """Tests for policy-aware orchestration and context propagation."""
 
+from app.modeling import ModelInput
 from app.models import SessionContext, SupportAgentRequest
 from app.orchestrator import SupportAgentOrchestrator
-from app.modeling import ModelInput
 from policies.contracts import PolicyDecision
 from retrieval.contracts import DocumentProvenance, RetrievalDocument, SourceTrustMetadata
 from tools.contracts import ToolDecision, ToolDescriptor
@@ -164,8 +164,6 @@ def test_orchestration_blocks_when_retrieval_policy_denied() -> None:
     event_types = [event.event_type for event in audit.events]
     assert "deny.event" in event_types
     assert "request.end" in event_types
-<<<<<<< HEAD
-=======
 
 
 class FakeDenyToolRouter:
@@ -268,4 +266,3 @@ def test_orchestration_activates_fallback_to_rag_when_tools_route_denied_with_fa
     assert response.tool_decisions == ()
     event_types = [event.event_type for event in audit.events]
     assert "fallback.event" in event_types
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)

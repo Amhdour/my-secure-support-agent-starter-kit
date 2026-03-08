@@ -1,14 +1,8 @@
 """Secure tool router that mediates all tool invocations."""
 
-<<<<<<< HEAD
-from dataclasses import dataclass
-import json
-from typing import Callable, Mapping
-=======
 from dataclasses import dataclass, field
 import json
 from typing import Mapping
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
 from policies.contracts import PolicyEngine
 from tools.contracts import (
@@ -33,13 +27,10 @@ class SecureToolRouter:
     registry: ToolRegistry
     rate_limiter: ToolRateLimiter
     policy_engine: PolicyEngine | None = None
-<<<<<<< HEAD
-=======
     _execution_secret: object = field(default_factory=object, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.registry.bind_execution_secret(self._execution_secret)
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
     def route(self, invocation: ToolInvocation) -> ToolDecision:
         if not invocation.request_id or not invocation.actor_id or not invocation.tenant_id:
@@ -50,55 +41,32 @@ class SecureToolRouter:
         descriptor = self.registry.get(invocation.tool_name)
         if descriptor is None:
             return self._deny(invocation, "tool is not registered")
-        if not descriptor.allowed:
-            return self._deny(invocation, "tool is not allowlisted")
-
-        if invocation.action in descriptor.forbidden_actions:
-            return self._deny(invocation, "action is forbidden for this tool")
-
-        forbidden_fields = set(descriptor.forbidden_fields)
-        violating_fields = sorted(field for field in invocation.arguments if field in forbidden_fields)
-        if violating_fields:
-            return self._deny(invocation, f"forbidden argument fields: {', '.join(violating_fields)}")
 
         if not self._valid_arguments(invocation.arguments):
             return self._deny(invocation, "tool arguments failed validation")
 
-        if self.policy_engine is not None:
-            try:
-                policy_decision = self.policy_engine.evaluate(
-                    request_id=invocation.request_id,
-                    action="tools.invoke",
-                    context={
-                        "tenant_id": invocation.tenant_id,
-                        "tool_name": invocation.tool_name,
-                        "action": invocation.action,
-                        "arguments": dict(invocation.arguments),
-                    },
-                )
-            except Exception:
-                return self._deny(invocation, "policy evaluation failed")
+        if self.policy_engine is None:
+            return self._deny(invocation, "policy engine unavailable")
 
-            if not policy_decision.allow:
-                return self._deny(invocation, f"policy denied: {policy_decision.reason}")
+        try:
+            policy_decision = self.policy_engine.evaluate(
+                request_id=invocation.request_id,
+                action="tools.invoke",
+                context={
+                    "tenant_id": invocation.tenant_id,
+                    "tool_name": invocation.tool_name,
+                    "action": invocation.action,
+                    "arguments": dict(invocation.arguments),
+                },
+            )
+        except Exception:
+            return self._deny(invocation, "policy evaluation failed")
 
-            confirmation_required = bool(policy_decision.constraints.get("confirmation_required", False))
-            if confirmation_required and not invocation.confirmed:
-                return ToolDecision(
-                    status=REQUIRE_CONFIRMATION_DECISION,
-                    tool_name=invocation.tool_name,
-                    action=invocation.action,
-                    reason="tool use requires explicit confirmation",
-                    sanitized_arguments=self._sanitize_arguments(invocation.arguments),
-                )
+        if not policy_decision.allow:
+            return self._deny(invocation, f"policy denied: {policy_decision.reason}")
 
-            policy_rate_limit = policy_decision.constraints.get("rate_limit_per_minute")
-            if isinstance(policy_rate_limit, int) and policy_rate_limit > 0:
-                key = f"{invocation.tenant_id}:{invocation.actor_id}:{invocation.tool_name}"
-                if not self.rate_limiter.allow(key, policy_rate_limit):
-                    return self._deny(invocation, "rate limit exceeded")
-
-        if descriptor.confirmation_required and not invocation.confirmed:
+        confirmation_required = bool(policy_decision.constraints.get("confirmation_required", False))
+        if confirmation_required and not invocation.confirmed:
             return ToolDecision(
                 status=REQUIRE_CONFIRMATION_DECISION,
                 tool_name=invocation.tool_name,
@@ -107,9 +75,10 @@ class SecureToolRouter:
                 sanitized_arguments=self._sanitize_arguments(invocation.arguments),
             )
 
-        if descriptor.rate_limit_per_minute is not None:
+        policy_rate_limit = policy_decision.constraints.get("rate_limit_per_minute")
+        if isinstance(policy_rate_limit, int) and policy_rate_limit > 0:
             key = f"{invocation.tenant_id}:{invocation.actor_id}:{invocation.tool_name}"
-            if not self.rate_limiter.allow(key, descriptor.rate_limit_per_minute):
+            if not self.rate_limiter.allow(key, policy_rate_limit):
                 return self._deny(invocation, "rate limit exceeded")
 
         return ToolDecision(
@@ -123,23 +92,13 @@ class SecureToolRouter:
     def mediate_and_execute(
         self,
         invocation: ToolInvocation,
-<<<<<<< HEAD
-        executor: Callable[[ToolInvocation], Mapping[str, object]],
-    ) -> tuple[ToolDecision, Mapping[str, object] | None]:
-        """Route first, then execute only if allowed."""
-=======
     ) -> tuple[ToolDecision, Mapping[str, object] | None]:
         """Route first, then execute only if allowed via the centralized registry."""
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
         decision = self.route(invocation)
         if decision.status != ALLOWED_DECISION:
             return decision, None
-<<<<<<< HEAD
-        return decision, executor(invocation)
-=======
         return decision, self.registry.execute(invocation, execution_secret=self._execution_secret)
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 
     def _deny(self, invocation: ToolInvocation, reason: str) -> ToolDecision:
         return ToolDecision(

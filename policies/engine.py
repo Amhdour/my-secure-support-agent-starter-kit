@@ -53,12 +53,9 @@ class RuntimePolicyEngine(PolicyEngine):
             constraints = {
                 "allowed_source_ids": list(allowed_sources),
                 "top_k_cap": tier.max_retrieval_top_k,
-<<<<<<< HEAD
-=======
                 "require_trust_metadata": self.policy.retrieval.require_trust_metadata,
                 "require_provenance": self.policy.retrieval.require_provenance,
                 "allowed_trust_domains": list(self.policy.retrieval.allowed_trust_domains),
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
             }
             return PolicyDecision(
                 request_id=request_id,
