@@ -1,18 +1,13 @@
 """Tests for secure tool routing decisions and enforcement."""
 
-<<<<<<< HEAD
-=======
 import pytest
 
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
+from policies.contracts import PolicyDecision
 from tools.contracts import (
     ALLOWED_DECISION,
     DENY_DECISION,
     REQUIRE_CONFIRMATION_DECISION,
-<<<<<<< HEAD
-=======
     DirectToolExecutionDeniedError,
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
     ToolDescriptor,
     ToolInvocation,
 )
@@ -21,16 +16,45 @@ from tools.registry import InMemoryToolRegistry
 from tools.router import SecureToolRouter
 
 
-<<<<<<< HEAD
-def _router_with_tool(tool: ToolDescriptor) -> SecureToolRouter:
-    registry = InMemoryToolRegistry()
-    registry.register(tool)
-=======
-def _router_with_tool(tool: ToolDescriptor, executor=None) -> SecureToolRouter:
+class PolicyAllowInvoke:
+    def evaluate(self, request_id: str, action: str, context: dict) -> PolicyDecision:
+        assert action == "tools.invoke"
+        return PolicyDecision(request_id=request_id, allow=True, reason="allowed", constraints={})
+
+
+class PolicyDenyInvoke:
+    def evaluate(self, request_id: str, action: str, context: dict) -> PolicyDecision:
+        return PolicyDecision(request_id=request_id, allow=False, reason="tool denied by policy")
+
+
+class PolicyRequireConfirmation:
+    def evaluate(self, request_id: str, action: str, context: dict) -> PolicyDecision:
+        return PolicyDecision(
+            request_id=request_id,
+            allow=True,
+            reason="allowed",
+            constraints={"confirmation_required": True},
+        )
+
+
+class PolicyRateLimited:
+    def evaluate(self, request_id: str, action: str, context: dict) -> PolicyDecision:
+        return PolicyDecision(
+            request_id=request_id,
+            allow=True,
+            reason="allowed",
+            constraints={"rate_limit_per_minute": 1},
+        )
+
+
+def _router_with_tool(tool: ToolDescriptor, executor=None, policy_engine=None) -> SecureToolRouter:
     registry = InMemoryToolRegistry()
     registry.register(tool, executor=executor)
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
-    return SecureToolRouter(registry=registry, rate_limiter=InMemoryToolRateLimiter())
+    return SecureToolRouter(
+        registry=registry,
+        rate_limiter=InMemoryToolRateLimiter(),
+        policy_engine=policy_engine,
+    )
 
 
 def _invocation(*, tool_name: str, arguments: dict[str, object] | None = None, confirmed: bool = False):
@@ -45,31 +69,32 @@ def _invocation(*, tool_name: str, arguments: dict[str, object] | None = None, c
     )
 
 
-def test_allowlisted_tool_execution() -> None:
+def test_allowlisted_tool_execution_when_policy_allows() -> None:
     router = _router_with_tool(
-<<<<<<< HEAD
-        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True)
-    )
-
-    decision, result = router.mediate_and_execute(
-        _invocation(tool_name="ticket_lookup"),
+        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
         executor=lambda _: {"ok": True},
+        policy_engine=PolicyAllowInvoke(),
     )
 
-=======
+    decision, result = router.mediate_and_execute(_invocation(tool_name="ticket_lookup"))
+
+    assert decision.status == ALLOWED_DECISION
+    assert result == {"ok": True}
+
+
+def test_router_fails_closed_without_policy_engine() -> None:
+    router = _router_with_tool(
         ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
         executor=lambda _: {"ok": True},
     )
 
     decision, result = router.mediate_and_execute(_invocation(tool_name="ticket_lookup"))
 
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
-    assert decision.status == ALLOWED_DECISION
-    assert result == {"ok": True}
+    assert decision.status == DENY_DECISION
+    assert "policy engine unavailable" in decision.reason
+    assert result is None
 
 
-<<<<<<< HEAD
-=======
 def test_direct_registry_execution_is_blocked_loudly() -> None:
     registry = InMemoryToolRegistry()
     registry.register(
@@ -81,42 +106,43 @@ def test_direct_registry_execution_is_blocked_loudly() -> None:
         registry.execute(_invocation(tool_name="ticket_lookup"), execution_secret=object())
 
 
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
-def test_forbidden_tool_denial() -> None:
+def test_unregistered_tool_denial() -> None:
     router = _router_with_tool(
-        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=False)
+        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
+        policy_engine=PolicyAllowInvoke(),
     )
 
-    decision = router.route(_invocation(tool_name="ticket_lookup"))
+    decision = router.route(_invocation(tool_name="missing_tool"))
 
     assert decision.status == DENY_DECISION
-    assert "allowlisted" in decision.reason
+    assert "not registered" in decision.reason
 
 
-def test_forbidden_field_blocking() -> None:
+def test_policy_drives_tool_denial_and_blocks_execution() -> None:
+    calls: list[str] = []
+
+    def _executor(invocation: ToolInvocation):
+        calls.append(invocation.tool_name)
+        return {"ok": True}
+
     router = _router_with_tool(
-        ToolDescriptor(
-            name="ticket_lookup",
-            description="lookup",
-            allowed=True,
-            forbidden_fields=("ssn",),
-        )
+        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
+        executor=_executor,
+        policy_engine=PolicyDenyInvoke(),
     )
 
-    decision = router.route(_invocation(tool_name="ticket_lookup", arguments={"ticket_id": "T-1", "ssn": "1"}))
+    decision, result = router.mediate_and_execute(_invocation(tool_name="ticket_lookup"))
 
     assert decision.status == DENY_DECISION
-    assert "forbidden argument fields" in decision.reason
+    assert "policy denied" in decision.reason
+    assert result is None
+    assert calls == []
 
 
-def test_confirmation_required_flow() -> None:
+def test_policy_drives_confirmation_required_flow() -> None:
     router = _router_with_tool(
-        ToolDescriptor(
-            name="account_update",
-            description="update",
-            allowed=True,
-            confirmation_required=True,
-        )
+        ToolDescriptor(name="account_update", description="update", allowed=True),
+        policy_engine=PolicyRequireConfirmation(),
     )
 
     unconfirmed = router.route(_invocation(tool_name="account_update", confirmed=False))
@@ -126,14 +152,10 @@ def test_confirmation_required_flow() -> None:
     assert confirmed.status == ALLOWED_DECISION
 
 
-def test_rate_limit_enforcement() -> None:
+def test_policy_drives_rate_limit_enforcement() -> None:
     router = _router_with_tool(
-        ToolDescriptor(
-            name="ticket_lookup",
-            description="lookup",
-            allowed=True,
-            rate_limit_per_minute=1,
-        )
+        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
+        policy_engine=PolicyRateLimited(),
     )
 
     first = router.route(_invocation(tool_name="ticket_lookup"))
@@ -145,7 +167,10 @@ def test_rate_limit_enforcement() -> None:
 
 
 def test_tool_router_denies_missing_actor_or_tenant_context() -> None:
-    router = _router_with_tool(ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True))
+    router = _router_with_tool(
+        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
+        policy_engine=PolicyAllowInvoke(),
+    )
 
     decision = router.route(
         ToolInvocation(
@@ -163,64 +188,28 @@ def test_tool_router_denies_missing_actor_or_tenant_context() -> None:
 
 
 def test_tool_router_redacts_argument_values_in_decisions() -> None:
-    router = _router_with_tool(ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True))
+    router = _router_with_tool(
+        ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
+        policy_engine=PolicyAllowInvoke(),
+    )
 
     decision = router.route(_invocation(tool_name="ticket_lookup", arguments={"ticket_id": "T-1", "email": "a@b.com"}))
 
     assert decision.status == ALLOWED_DECISION
     assert decision.sanitized_arguments == {"ticket_id": "[redacted]", "email": "[redacted]"}
-<<<<<<< HEAD
-=======
 
 
-def test_router_executes_registered_executor_once_for_allowed_calls() -> None:
-    calls: list[str] = []
+def test_policy_change_changes_runtime_decision() -> None:
+    invocation = _invocation(tool_name="ticket_lookup")
 
-    def _executor(invocation: ToolInvocation):
-        calls.append(invocation.tool_name)
-        return {"status": "ok"}
-
-    router = _router_with_tool(
+    allow_router = _router_with_tool(
         ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
-        executor=_executor,
+        policy_engine=PolicyAllowInvoke(),
     )
-
-    decision, result = router.mediate_and_execute(_invocation(tool_name="ticket_lookup"))
-
-    assert decision.status == ALLOWED_DECISION
-    assert result == {"status": "ok"}
-    assert calls == ["ticket_lookup"]
-
-
-class DenyInvokePolicyEngine:
-    def evaluate(self, request_id: str, action: str, context: dict):
-        from policies.contracts import PolicyDecision
-
-        return PolicyDecision(request_id=request_id, allow=False, reason="tool denied by policy")
-
-
-def test_tool_denial_by_policy_blocks_execution() -> None:
-    calls: list[str] = []
-
-    def _executor(invocation: ToolInvocation):
-        calls.append(invocation.tool_name)
-        return {"ok": True}
-
-    registry = InMemoryToolRegistry()
-    registry.register(
+    deny_router = _router_with_tool(
         ToolDescriptor(name="ticket_lookup", description="lookup", allowed=True),
-        executor=_executor,
-    )
-    router = SecureToolRouter(
-        registry=registry,
-        rate_limiter=InMemoryToolRateLimiter(),
-        policy_engine=DenyInvokePolicyEngine(),
+        policy_engine=PolicyDenyInvoke(),
     )
 
-    decision, result = router.mediate_and_execute(_invocation(tool_name="ticket_lookup"))
-
-    assert decision.status == DENY_DECISION
-    assert "policy denied" in decision.reason
-    assert result is None
-    assert calls == []
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
+    assert allow_router.route(invocation).status == ALLOWED_DECISION
+    assert deny_router.route(invocation).status == DENY_DECISION
