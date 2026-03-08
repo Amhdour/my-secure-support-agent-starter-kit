@@ -30,14 +30,10 @@ launch_gate:
   required_checks:
     - mandatory_controls
     - policy_artifact
-<<<<<<< HEAD
-    - audit_minimums
-=======
     - retrieval_boundary_config
     - tool_router_enforcement_config
     - kill_switch_state
     - audit_minimums
     - replay_artifact
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
     - eval_threshold
     - fallback_readiness

@@ -7,15 +7,8 @@ Phase 4 adds:
 - `SecureToolRouter` to mediate every tool invocation.
 - Explicit router decisions: `allow`, `deny`, `require_confirmation`.
 - Support for allowlists, forbidden actions, forbidden fields, and per-tool rate limits.
-<<<<<<< HEAD
-- Input validation before execution and mediated execution helper (`mediate_and_execute`).
-
-Important:
-- No direct tool execution path should bypass the router.
-=======
 - Input validation before execution and mediated execution helper (`mediate_and_execute`) that executes only via registry-registered handlers.
 
 Important:
 - No direct tool execution path should bypass the router; direct registry execution without router mediation is blocked loudly.
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 - Router is policy-ready and deny-first when uncertain.

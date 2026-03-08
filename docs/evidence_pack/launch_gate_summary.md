@@ -13,17 +13,12 @@ python -m launch_gate.engine
 ## Current Gate Checks
 - Mandatory control files present.
 - Policy artifact present and valid.
-<<<<<<< HEAD
-- Audit minimum evidence present.
-- Eval threshold met.
-=======
 - Retrieval boundary consistency (tenant allowlists aligned with tenant source allowlists + trust/provenance requirements).
 - Tool-router enforcement configuration present (allowlists, forbidden fields, rate limits).
 - Production kill-switch state acceptable (disabled).
 - Audit minimum evidence present.
 - Replay artifact evidence present/valid when required.
 - Eval threshold and outcome health met.
->>>>>>> 6d03c87 (harden launch-gate retrieval-boundary consistency verification)
 - Fallback readiness present.
 
 ## Evidence Expectations
