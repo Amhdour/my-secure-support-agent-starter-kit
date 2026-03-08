@@ -15,6 +15,7 @@ from telemetry.audit.contracts import (
     AuditSink,
 )
 from telemetry.audit.events import create_audit_event, generate_trace_id
+from telemetry.audit.replay import ReplayArtifact, build_replay_artifact, write_replay_artifact
 from telemetry.audit.sinks import InMemoryAuditSink, JsonlAuditSink
 
 __all__ = [
@@ -34,4 +35,7 @@ __all__ = [
     "AuditSink",
     "create_audit_event",
     "generate_trace_id",
+    "ReplayArtifact",
+    "build_replay_artifact",
+    "write_replay_artifact",
 ]
